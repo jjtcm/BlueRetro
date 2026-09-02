@@ -30,7 +30,7 @@ jobs:
           SEARCH_QUERY: 'repo:darthcloud/BlueRetro created:${{ env.last_month }}'
 
       - name: Upload artifact
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: issue_metrics
           path: |

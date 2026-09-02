@@ -29,7 +29,7 @@ jobs:
 
     steps:
     - name: Checkout repo
-      uses: actions/checkout@v4
+      uses: actions/checkout@v6
       with:
         submodules: recursive
         fetch-depth: 0
@@ -49,7 +49,7 @@ jobs:
         mkdir ota
         mv ota_data_initial.bin ota/
     - name: Upload artifact
-      uses: actions/upload-artifact@v4
+      uses: actions/upload-artifact@v7
       with:
         name: ${{ matrix.hw_version }}_${{ matrix.br_config }}
         path: |
@@ -65,19 +65,19 @@ jobs:
 
     steps:
       - name: Merge Artifacts HW1
-        uses: actions/upload-artifact/merge@v4
+        uses: actions/upload-artifact/merge@v7
         with:
           name: ${{ needs.build.outputs.br_version }}_hw1
           pattern: hw1*
           delete-merged: true
       - name: Merge Artifacts HW2
-        uses: actions/upload-artifact/merge@v4
+        uses: actions/upload-artifact/merge@v7
         with:
           name: ${{ needs.build.outputs.br_version }}_hw2
           pattern: hw2*
           delete-merged: true
       - name: Merge Artifacts DBG
-        uses: actions/upload-artifact/merge@v4
+        uses: actions/upload-artifact/merge@v7
         with:
           name: ${{ needs.build.outputs.br_version }}_dbg
           pattern: dbg*
