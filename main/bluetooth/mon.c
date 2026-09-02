@@ -83,6 +83,7 @@ void IRAM_ATTR bt_mon_tx(uint16_t opcode, uint8_t *data, uint16_t len) {
     uart_write_bytes(uart_port, &mon_hdr, sizeof(mon_hdr));
     uart_write_bytes(uart_port, data, len);
 #else
+    static DRAM_ATTR portMUX_TYPE offset_mux = portMUX_INITIALIZER_UNLOCKED;
     static uint32_t offset = 0;
     if (config.global_cfg.banksel == CONFIG_BANKSEL_DBG && (offset + len) <= MC_BUFFER_SIZE) {
         uint32_t hdr_len = sizeof(struct bt_mon_hdr);
@@ -93,10 +94,11 @@ void IRAM_ATTR bt_mon_tx(uint16_t opcode, uint8_t *data, uint16_t len) {
         mon_hdr.ts_type = 8;
         mon_hdr.ts_data = esp_timer_get_time() / 100;
 
+        portENTER_CRITICAL_ISR(&offset_mux);
         while (hdr_len) {
             uint32_t max_len = MC_BUFFER_BLOCK_SIZE - (offset % MC_BUFFER_BLOCK_SIZE);
             uint32_t write_len = (hdr_len > max_len) ? max_len : hdr_len;
-            mc_write(offset, hdr_data, hdr_len);
+            mc_write(offset, hdr_data, write_len);
             offset += write_len;
             hdr_data += write_len;
             hdr_len -= write_len;
@@ -105,11 +107,12 @@ void IRAM_ATTR bt_mon_tx(uint16_t opcode, uint8_t *data, uint16_t len) {
         while (len) {
             uint32_t max_len = MC_BUFFER_BLOCK_SIZE - (offset % MC_BUFFER_BLOCK_SIZE);
             uint32_t write_len = (len > max_len) ? max_len : len;
-            mc_write(offset, data, len);
+            mc_write(offset, data, write_len);
             offset += write_len;
             data += write_len;
             len -= write_len;
         }
+        portEXIT_CRITICAL_ISR(&offset_mux);
     }
 #endif /* CONFIG_BLUERETRO_BT_H4_TRACE */
 }

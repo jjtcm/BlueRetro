@@ -169,16 +169,23 @@ void mc_storage_update(void) {
     mc_start_update_timer(1000000);
 }
 
-/* Assume r/w size will never cross blocks boundary */
 void IRAM_ATTR mc_read(uint32_t addr, uint8_t *data, uint32_t size) {
-    memcpy(data, mc_buffer[addr >> 12] + (addr & 0xFFF), size);
+    uint32_t block = addr >> 12;
+    if (block < MC_BUFFER_BLOCK_CNT && mc_buffer[block]) {
+        memcpy(data, mc_buffer[block] + (addr & 0xFFF), size);
+    }
 }
 
 void IRAM_ATTR mc_write(uint32_t addr, uint8_t *data, uint32_t size) {
     struct raw_fb fb_data = {0};
     uint32_t block = addr >> 12;
 
-    memcpy(mc_buffer[block] + (addr & 0xFFF), data, size);
+    if (block < MC_BUFFER_BLOCK_CNT && mc_buffer[block]) {
+        memcpy(mc_buffer[block] + (addr & 0xFFF), data, size);
+    }
+    else {
+        return;
+    }
 
     if (config.global_cfg.banksel < CONFIG_BANKSEL_MAX) {
         atomic_set_bit(&mc_block_state, block);
@@ -191,7 +198,11 @@ void IRAM_ATTR mc_write(uint32_t addr, uint8_t *data, uint32_t size) {
 }
 
 uint8_t IRAM_ATTR *mc_get_ptr(uint32_t addr) {
-    return mc_buffer[addr >> 12] + (addr & 0xFFF);
+    uint32_t block = addr >> 12;
+    if (block < MC_BUFFER_BLOCK_CNT && mc_buffer[block]) {
+        return mc_buffer[block] + (addr & 0xFFF);
+    }
+    return NULL;
 }
 
 uint32_t IRAM_ATTR mc_get_state(void) {
