@@ -22,6 +22,7 @@
 #include "att_cfg.h"
 #include "att_hid.h"
 #include "smp.h"
+#include "smp_sc.h"
 #include "tools/util.h"
 #include "debug.h"
 #include "mon.h"
@@ -531,6 +532,7 @@ reset_dev:
     device->ids.type = BT_NONE;
     device->ids.subtype = BT_SUBTYPE_DEFAULT;
     bt_adapter.data[dev_id].base.pids = &device->ids;
+    smp_sc_reset(device);
 }
 
 void bt_host_q_wait_pkt(uint32_t ms) {
