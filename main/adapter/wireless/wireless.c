@@ -10,6 +10,7 @@
 #include "ps.h"
 #include "sw.h"
 #include "sw2.h"
+#include "steam.h"
 #include "wireless.h"
 
 static to_generic_t to_generic_func[BT_TYPE_MAX] = {
@@ -19,6 +20,7 @@ static to_generic_t to_generic_func[BT_TYPE_MAX] = {
     ps_to_generic, /* BT_PS */
     sw_to_generic, /* BT_SW */
     sw2_to_generic, /* BT_SW2 */
+    steam_to_generic, /* BT_STEAM */
 };
 
 static fb_from_generic_t fb_from_generic_func[BT_TYPE_MAX] = {
@@ -28,6 +30,7 @@ static fb_from_generic_t fb_from_generic_func[BT_TYPE_MAX] = {
     ps_fb_from_generic, /* BT_PS */
     sw_fb_from_generic, /* BT_SW */
     sw2_fb_from_generic, /* BT_SW2 */
+    steam_fb_from_generic, /* BT_STEAM */
 };
 
 int32_t wireless_to_generic(struct bt_data *bt_data, struct wireless_ctrl *ctrl_data) {

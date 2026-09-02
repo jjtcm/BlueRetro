@@ -16,6 +16,7 @@
 #include "adapter/hid_parser.h"
 #include "adapter/mapping_quirks.h"
 #include "hidp/sw2.h"
+#include "hidp/steam.h"
 
 enum {
     BT_ATT_HID_DEVICE_NAME = 0,
@@ -146,6 +147,21 @@ static void bt_att_hid_process_pnp(struct bt_dev *device,
     if (data) {
         bt_data->base.vid = *(uint16_t *)&data[1];
         bt_data->base.pid = *(uint16_t *)&data[3];
+
+        /* Steam Controller 2026 (Triton) uses Valve's proprietary GATT service,
+         * route it to the dedicated GATT client instead of HOGP */
+        if (bt_data->base.vid == STEAM_VID) {
+            switch (bt_data->base.pid) {
+                case STEAM_TRITON_PID_USB:
+                case STEAM_TRITON_PID_BLE:
+                case STEAM_TRITON_PID_PUCK:
+                case STEAM_TRITON_PID_NEREID:
+                    bt_type_update(device->ids.id, BT_STEAM, BT_SUBTYPE_DEFAULT);
+                    break;
+                default:
+                    break;
+            }
+        }
     }
     printf("%s: VID: 0x%04X PID: 0x%04X\n", __FUNCTION__, bt_data->base.vid, bt_data->base.pid);
     bt_mon_log(true, "%s: VID: 0x%04X PID: 0x%04X\n", __FUNCTION__, bt_data->base.vid, bt_data->base.pid);
@@ -475,6 +491,9 @@ static void bt_att_hid_start_next_state(struct bt_dev *device,
     if (device->ids.type == BT_SW2 && !atomic_test_bit(&device->flags, BT_DEV_HID_INIT_DONE)) {
         bt_hid_sw2_init(device);
     }
+    else if (device->ids.type == BT_STEAM && !atomic_test_bit(&device->flags, BT_DEV_HID_INIT_DONE)) {
+        bt_hid_steam_init(device);
+    }
     else {
         device->hid_state++;
         if (device->hid_state < BT_ATT_HID_STATE_MAX && start_state_func[device->hid_state]) {
@@ -525,6 +544,12 @@ void bt_att_write_hid_report(struct bt_dev *device, uint8_t report_id, uint8_t *
 void bt_att_hid_hdlr(struct bt_dev *device, struct bt_hci_pkt *bt_hci_acl_pkt, uint32_t len) {
     struct bt_att_hid *hid_data = &att_hid[device->ids.id];
     uint32_t att_len = len - (BT_HCI_H4_HDR_SIZE + BT_HCI_ACL_HDR_SIZE + sizeof(struct bt_l2cap_hdr));
+
+    /* Steam Controller 2026 (Triton) uses Valve's proprietary GATT client */
+    if (device->ids.type == BT_STEAM) {
+        bt_hid_steam_hdlr(device, bt_hci_acl_pkt, len);
+        return;
+    }
 
     switch (bt_hci_acl_pkt->att_hdr.code) {
         case BT_ATT_OP_ERROR_RSP:
