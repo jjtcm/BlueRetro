@@ -29,7 +29,7 @@ def main():
         '--flash_freq', '40m',
         '0x1000', f'{dir}/bootloader/bootloader.bin',
         '0x8000', f'{dir}/partition_table/partition-table.bin',
-        '0xd000', f'{dir}/ota/ota_data_initial.bin',
+        '0xd000', f'{dir}/ota_data_initial.bin',
         '0x10000', args.firmware,
     ]
     esptool(command)
