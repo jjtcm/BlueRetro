@@ -1,3 +1,6 @@
+> *Note: This is a specialized fork of BlueRetro. This version adds support for **LE Secure Connections (SC)** and the **Steam Controller (Triton)** to the original codebase.*
+> *Expect bugs or broken controller support. I only tested it with the Steam Controller and a PS4 Controller.*
+
 **This repository has been archived and is no longer under active development or maintenance.**
 
 ```
